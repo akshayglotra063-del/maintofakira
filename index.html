@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>मैं तो फ़कीरा — Muntzir</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Noto+Serif+Devanagari:wght@300;600&display=swap" rel="stylesheet">
+<meta property="og:title" content="मैं तो फ़कीरा — Akshay">
+<meta property="og:description" content="Click to enter the cinematic experience.">
+<meta property="og:image" content="https://https://akshayglotra063-del.github.io/maintofakira/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">   
+ <style>
+        :root {
+            --gold: #C8832A;
+            --gold-bright: #FFD700;
+            --dark: #080604;
+            --glass: rgba(255, 255, 255, 0.03);
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background: var(--dark);
+            color: white;
+            font-family: 'EB Garamond', serif;
+            overflow: hidden; /* Cinematic look often works best without scrolling */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ── CINEMATIC BACKGROUND ── */
+        .bg-overlay {
+            position: fixed; inset: 0;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(200, 131, 42, 0.15) 0%, transparent 60%),
+                radial-gradient(circle at 20% 80%, rgba(139, 90, 26, 0.1) 0%, transparent 40%);
+            animation: breathe 10s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+
+        /* ── CANVAS FOR VISUALIZER PARTICLES ── */
+        #visualizer {
+            position: fixed; inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ── MAIN CONTENT CARD ── */
+        .content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 40px;
+            background: var(--glass);
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 40px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+            max-width: 450px;
+            width: 85%;
+        }
+
+        .artist-title {
+            font-family: 'Cinzel', serif;
+            letter-spacing: 6px;
+            color: var(--gold);
+            font-size: 11px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .song-name {
+            font-family: 'Noto Serif Devanagari', serif;
+            font-size: clamp(32px, 8vw, 48px);
+            margin: 0;
+            font-weight: 600;
+            text-shadow: 0 0 30px rgba(200, 131, 42, 0.5);
+        }
+
+        .sub-title {
+            font-style: italic;
+            opacity: 0.6;
+            margin-bottom: 40px;
+            letter-spacing: 1px;
+        }
+
+        /* ── THE BUTTON ── */
+        .play-trigger {
+            width: 100px; height: 100px;
+            background: transparent;
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        .play-trigger:hover {
+            transform: scale(1.1);
+            border-color: var(--gold-bright);
+            box-shadow: 0 0 30px rgba(200, 131, 42, 0.4);
+        }
+
+        .play-trigger svg {
+            fill: var(--gold);
+            width: 30px; height: 30px;
+            transition: 0.3s;
+        }
+
+        /* Glow ring for playing state */
+        .play-trigger.playing {
+            background: var(--gold);
+            box-shadow: 0 0 50px rgba(200, 131, 42, 0.6);
+        }
+        .play-trigger.playing svg { fill: var(--dark); }
+
+        /* ── VIGNETTE ── */
+        .vignette {
+            position: fixed; inset: 0;
+            background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.9) 100%);
+            pointer-events: none;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-overlay"></div>
+    <div class="vignette"></div>
+    <canvas id="visualizer"></canvas>
+
+    <div class="content">
+        <div class="artist-title">Muntzir Music</div>
+        <h1 class="song-name">मैं तो फ़कीरा</h1>
+        <p class="sub-title">Main to Fakira, Tu Meri Jaan Hai</p>
+
+        <audio id="audio" src="fakira.mp3" loop></audio>
+
+        <div class="play-trigger" id="playBtn" onclick="toggleAudio()">
+            <svg id="icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+        
+        <p style="margin-top: 30px; font-size: 10px; letter-spacing: 3px; opacity: 0.4; font-family: 'Cinzel';">Sufi Cinematic Experience</p>
+    </div>
+
+    <script>
+        const audio = document.getElementById('audio');
+        const playBtn = document.getElementById('playBtn');
+        const icon = document.getElementById('icon');
+        const canvas = document.getElementById('visualizer');
+        const ctx = canvas.getContext('2d');
+
+        let isPlaying = false;
+
+        function toggleAudio() {
+            if (audio.paused) {
+                audio.play();
+                isPlaying = true;
+                playBtn.classList.add('playing');
+                icon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+            } else {
+                audio.pause();
+                isPlaying = false;
+                playBtn.classList.remove('playing');
+                icon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+            }
+        }
+
+        // VISUALIZER PARTICLES
+        let particles = [];
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.alpha = Math.random() * 0.5;
+            }
+            update() {
+                let multiplier = isPlaying ? 4 : 1; // Faster when music plays
+                this.x += this.speedX * multiplier;
+                this.y += this.speedY * multiplier;
+                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+            }
+            draw() {
+                ctx.fillStyle = `rgba(200, 131, 42, ${this.alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 100; i++) particles.push(new Particle());
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+document.body.addEventListener('click', function() {
+    if (audio.paused) {
+        toggleAudio();
+    }
+}, { once: true });
+    </script>
+</body>
+</html>
